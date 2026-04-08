@@ -39,6 +39,21 @@ class pv(Asset):
 
 		return None
 
+	def _get_irradiance_kw(self) -> Optional[float]:
+		"""Return normalised irradiance (G / G_STC) from the data input port.
+
+		Standard test condition (G_STC) is 1000 W/m².
+		Returns None when no irradiance data has been connected/provided.
+		"""
+		raw = self.inputs.get("irradiance_in")
+		if raw is None:
+			return None
+		try:
+			watts_per_m2 = float(raw)
+		except (TypeError, ValueError):
+			return None
+		return watts_per_m2 / 1000.0
+
 	def calc(self, *args: Any, **kwargs: Any) -> Any:
 		if args and isinstance(args[0], datetime):
 			timestamp = args[0]

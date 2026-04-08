@@ -264,6 +264,30 @@ class Simulation:
             self._step(current_time)
             current_time += timedelta(hours=self.timestep_hours)
     
+    def _data_source_asset_types(self) -> set[str]:
+        """Return ASSET_TYPE values that produce only data outputs (no energy flows)."""
+        return {"env"}
+
+    def _propagate_data_pipes(self, timestamp: datetime) -> None:
+        """Push data-medium outputs from source assets into downstream asset inputs.
+
+        Data ports (irradiance, temperature, prices, …) use a push model:
+        after every data-source asset has been calculated, forward its outputs
+        directly through any connected data pipe to the destination asset's
+        input dictionary.  This lets downstream assets (e.g. PV) see sensor
+        values without going through the energy-flow resolver.
+        """
+        for pipe in self.pipes:
+            if self._normalize_medium(pipe.medium) != "data":
+                continue
+            for group in pipe.in_ports:
+                for source_port in group:
+                    value = source_port.asset.get_output(source_port.name)
+                    if value is None:
+                        continue
+                    for _, out_port in pipe.iter_out_ports():
+                        out_port.asset.set_input(out_port.name, value, timestamp)
+
     def _step(self, timestamp: datetime) -> None:
         """
         Execute one simulation timestep (one hour).
@@ -273,8 +297,8 @@ class Simulation:
             
         Flow:
             1. Evaluate data-source assets
-            2. Calculate outputs for all assets based on inputs
-            3. Propagate flows through pipes
+            2. Push data values through data pipes
+            3. Calculate outputs for all assets based on inputs
             4. Store results
         """
         # Reset hourly inputs and per-step pipe caches.
@@ -283,24 +307,31 @@ class Simulation:
         for pipe in self.pipes:
             pipe.reset(timestamp)
 
-        # Step 1: Evaluate optional data-source asset.
-        if 'env' in self.assets:
-            env_asset = self.assets['env']
-            env_asset.calc(timestamp)
-
-        # Step 2: Trigger recursive calc propagation for all assets.
+        # Step 1: Evaluate all data-source assets (env and any asset whose
+        #         ASSET_TYPE is in _data_source_asset_types).
+        data_source_types = self._data_source_asset_types()
+        data_source_ids: set[str] = set()
         for asset_id, asset in self.assets.items():
-            if asset_id == 'env':
+            if getattr(asset, "ASSET_TYPE", asset_id) in data_source_types or asset_id == "env":
+                asset.calc(timestamp)
+                data_source_ids.add(asset_id)
+
+        # Step 2: Push data pipe values into downstream asset inputs.
+        self._propagate_data_pipes(timestamp)
+
+        # Step 3: Trigger recursive calc propagation for all non-data assets.
+        for asset_id, asset in self.assets.items():
+            if asset_id in data_source_ids:
                 continue
             asset.calc(timestamp)
 
         # A second pass settles assets whose inputs were fulfilled later in the first pass.
         for asset_id, asset in self.assets.items():
-            if asset_id == 'env':
+            if asset_id in data_source_ids:
                 continue
             asset.calc(timestamp)
 
-        # Step 3: Store results.
+        # Step 4: Store results.
         self._store_results(timestamp)
 
     def _estimate_requested_input(self, asset: Asset, port_name: str) -> float:
