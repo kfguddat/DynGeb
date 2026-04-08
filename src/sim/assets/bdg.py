@@ -1,6 +1,3 @@
-#thermal model for building
-#in: thermal 
-#out: thermal
 from typing import Dict, Any, Optional
 from datetime import datetime
 from src.sim.asset import Asset
