@@ -1,0 +1,69 @@
+# INITIALISIERUNG
+Initialisiere Simulationsumgebung:
+    Zeitschritt dt = 1 Stunde (oder 15 Min)
+    Simulationsdauer = 8760 Stunden (1 Jahr)
+    Lade Wetterdaten (TRY-Datensatz: Text, G_solar, Wind) [3, 4]
+
+Erzeuge Agenten (Knoten):
+    Gebäude (RC-Parameter: R_hülle, C_masse, T_start, T_soll)
+    PV-Anlage (P_peak, Ausrichtung, Wirkungsgrad_temp) [5, 6]
+    Wärmepumpe (COP-Kennlinie, Max_Leistung) [7, 8]
+    Batteriespeicher (Kapazität, Max_Ladeleistung, Wirkungsgrad) [9]
+    Kredit (Restschuld, Zinssatz, Annuität) [10, 11]
+    Konto (Startguthaben)
+
+Erzeuge Transmitter (Kanten):
+    Stromnetz-Anschluss (Kapazität, Netzgebühren)
+    Heizrohre (Wärmeverlustrate, Max_Durchfluss) [12]
+    Geldfluss-Verbindungen (Transaktionsregeln)
+
+# HAUPTSIMULATIONS-SCHLEIFE
+Für jeden Zeitschritt t von 1 bis Simulationsdauer:
+
+    # 1. UMWELTDATEN AKTUALISIEREN
+    Hole aktuelle Werte aus TRY: T_ext(t), G_solar(t)
+
+    # 2. TECHNISCHE LEISTUNGSBERECHNUNG (Agenten-Ebene)
+    PV_Leistung = Berechne_PV_Ertrag(G_solar(t), T_ext(t)) [13, 14]
+    Heizbedarf = Gebäude.Berechne_Heizlast(T_ext(t)) 
+    # Formel: Q_last = (T_innen(t) - T_ext(t)) / R_hülle 
+
+    # 3. ENERGIEMANAGEMENT (EMS Logic / RBC)
+    Entscheidungslogik:
+        WENN PV_Leistung > Gebäude_Strombedarf:
+            Überschuss = PV_Leistung - Gebäude_Strombedarf
+            Priorität 1: Lade Batterie (bis Kapazitätsgrenze)
+            Priorität 2: Betreibe Wärmepumpe ("Pre-heating" des Gebäudes) [17, 18]
+            Priorität 3: Speise Rest in das öffentliche Netz ein (Einnahme generieren)
+        ANSONSTEN:
+            Defizit = Gebäude_Strombedarf - PV_Leistung
+            Priorität 1: Entlade Batterie
+            Priorität 2: Beziehe Strom aus dem Netz (Kosten generieren)
+
+    # 4. FLUSS-SOLVER (Graph-Ebene) [19, 20]
+    Berechne tatsächliche Medienflüsse über Transmitter:
+        Stromfluss = Σ(Quellen - Senken) - Transmitterverlust [21]
+        Wärmefluss = Wärmepumpe_Output * η_rohr
+        Geldfluss = (Netzeinspeisung * Vergütung) - (Netzbezug * Preis)
+
+    # 5. ZUSTANDSAKTUALISIERUNG (Integration)
+    # Update Gebäude-Temperatur (Diskretisiertes RC-Modell)
+    T_innen(t+1) = T_innen(t) + (dt / C_masse) * (Q_wp + Q_solar - Q_verlust) [16]
+    
+    # Update Speicherstände
+    Batterie_SOC(t+1) = Batterie_SOC(t) + (Ladeleistung * dt * η) [9]
+    Konto_Stand(t+1) = Konto_Stand(t) + Geldfluss
+
+    # 6. FINANZ-INTERVALL (z.B. monatlich oder jährlich)
+    WENN t am Ende eines Monats:
+        Zinsen = Restschuld * (Zinssatz / 12)
+        Tilgung = Annuität - Zinsen
+        Restschuld = Restschuld - Tilgung
+        Konto_Stand = Konto_Stand - Annuität
+
+# AUSWERTUNG (Post-Processing)
+Berechne Performance-Metriken [22, 23]:
+    Gesamt_Autarkiegrad = Σ(Eigenverbrauch) / Σ(Gesamtbedarf)
+    NPV (Kapitalwert) = Barwert aller Cashflows über Simulationszeitraum
+    CO2_Bilanz = Σ(Netzbezug * Emissionsfaktor)
+Gib Ergebnisse als Zeitreihen und Sankey-Diagramm aus [24]

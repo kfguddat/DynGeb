@@ -1,0 +1,15 @@
+calc(self,Value) -> Value: #supply! // asset_out -> pipe_in // i have this much supply, distribute it!
+     for prio in max(in_ports, out_ports):
+         for port in in_ports[prio]:
+             if port != self:
+             port.calc(Value) #supply?
+         for port in out_ports[prio]:
+             if port != self:
+             port.calc(Value) #demand?
+             
+
+calc(Value) #supply? // pipe_in -> asset_out // i need this much supply, how much can you give me?
+     
+calc(Value) #demand! // asset_in -> pipe_out // i have this much demand, distribute it!
+
+calc(Value) #demand? // pipe_out -> asset_in // i need to distribute this, how much can you take?

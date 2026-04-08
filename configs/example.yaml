@@ -1,0 +1,29 @@
+assets:
+  - id: pv_5c403940
+    asset_type: pv
+    name: PV 1
+    pos: [208, 30.5]
+    capacity: 10
+    efficiency: 0.18
+    azimuth: 180
+    tilt: 35
+  - id: grd_94ffdfc9
+    asset_type: grd
+    name: Grid 4
+    pos: [118.5, 313]
+    preset: Default
+    color: '#b0d2c8'
+    import_kw: 0
+    price_export: 0.15
+    preset: Default
+    color: '#b0d2c8'
+    import_kw: 0
+    price_export: 0.15
+    price_import: 0.25
+pipes:
+  - id: pipe_7b16fc22
+    in:
+      - [pv_5c403940.electricity_out]
+    out:
+      - [grd_94ffdfc9.electricity_in]
+    medium: electric

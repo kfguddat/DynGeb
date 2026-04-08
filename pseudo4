@@ -1,0 +1,128 @@
+#components:
+#   gui: (probably in react, interacts with backend via API, web/ folder)
+#     - configurator (outputs .yaml config file for simulations and scenarios)
+#     - analysis (visualizes output data from simulations)
+#   simulation: (python, src/simulation.py)
+#     - create simulation
+#     - initialize assets with config from yaml file
+#     - order calc calls based on dependencies via topological sort (input/output keys) (returns list of values to calc in order), throws error if circular dependency detected
+#        - first layer: calc values with no dependencies (e.g. weather)
+#        - second layer: assets that depend only on first layer outputs
+#        - third layer: assets that depend on first and second layer outputs and so on
+#     - loop through timestamps based on dependency layers (all series with all timestamps as well as static values for first layer, then all timestamps and values for second layer and so on)
+#   value: (python, src/sim/value.py)
+#     - Value class with metadata (unit, description, default value) (for static values)
+#     - Series class that holds a dict of timestamp to value and associated Value metadata
+#   assets: (python,src/asset.py // src/sim/assets/*.py)
+#     - parent class Asset handles common logic between asset classes
+#     - each asset class defines input and output keys, expected types, and presets for config values
+#     - each asset class implements calc() method that calculates output values based on input values for given timestamp
+class(Sim)
+    def __init__(self, config_file):
+        #load config file
+        #initialize assets with config
+        #determine calc order based on dependencies
+
+    def order(self):
+        #determine order of asset calculations based on dependencies
+        #can be done with topological sort of dependency graph
+    
+    def run(self):
+        #loop through timestamps in simulation timeframe
+        #for each timestamp, loop through assets in calc order and call calc() with required input values
+
+
+class(Asset) #two- or three letter shorthand for asset class
+#implemented in asset.py:
+    def __init__(self, config):
+        """Initialize asset with config dictionary.
+        
+        Args:
+            config (dict): Configuration dictionary with input keys mapped to subscriptions.
+
+                          output values are set based on config or default preset values. 
+                          If output is a Series, it is initialized with the starting value from config or preset.
+                          Subscriptions are tuples of (asset_id, output_key) representing
+                          outputs from other assets to subscribe to.
+        """
+        # Merge with default preset if not fully specified
+        merged_config = {**self.PRESETS.get("default", {}), **config}
+        
+        # Initialize input subscriptions
+        for input_key in self.input:
+            if input_key in merged_config:
+                subscription = merged_config[input_key]
+                # subscription should be (asset_id, output_key) tuple
+                self.input[input_key] = subscription
+            else: # throw error: missing input key in config
+                raise ValueError(f"Missing input key '{input_key}' in config for asset '{self.__class__.__name__}' (not in default preset either)")
+        # Initialize output values
+        for output_key in self.output:
+            if output_key in merged_config:
+                value = merged_config[output_key]
+                output_type = self.output[output_key][0]
+                # If expecting Series, initialize with starting value
+                if isinstance(output_type, type) and issubclass(output_type, Series):
+                    self.output[output_key] = [Series(starting_value=value), self.output[output_key][1]]
+                else:
+                    self.output[output_key] = [value, self.output[output_key][1]]
+            else:
+                # Set default from preset if available
+                if "output" in self.PRESETS.get("default", {}):
+                    preset_output = self.PRESETS["default"]["output"].get(output_key)
+                    if preset_output:
+                        self.output[output_key] = [preset_output, self.output[output_key][1]]
+
+    @classmethod
+    def get_preset(key=None): #returns dict of preset name to config values
+        if key:
+            return self.PRESETS[key]
+        else:
+            return self.PRESETS
+    @classmethod
+    def get_input(key=None): #returns dict of input key to expected type or expected type for given key
+        if key:
+            return self.input[key]
+        else:
+            return self.input
+    @classmethod
+    def get_output(key=None): #returns dict of output key to expected type 
+        if key:
+            return self.output[key]
+        else:
+            return self.output
+    @classmethod
+    def get_dependency(key): #returns list of input keys required to calculate output key
+        return self.output[key][1]
+    
+    # implemented in asset specific classes:
+
+    PRESETS = {
+        "default":{
+            "name":"Asset",
+            "color":"#abcdef"
+            "input":{
+                "data_key":"asset_id.key"
+            }
+            "output":{
+                "output1":"asset_id.key"
+            }
+        }
+    }
+    input = {
+        "input1": Series(), #key and expected input type
+        "input2": Series(),
+    }
+    output = {#name, color 
+        "output1": [Series(), [input1, input2]], #key, output type, and required keys for calc()
+        "output2": [Value(), []],
+    }
+
+    def calc(self, key, timeframe): #calculate output values for given timestamp and input key
+        if key == "output1":
+            for timestamp in timeframe:
+            output_value = 3
+            self.output("output1", timestamp, output_value)
+        elif key == "output2":
+            output_value = 5
+            self.output("output2", timestamp, output_value)

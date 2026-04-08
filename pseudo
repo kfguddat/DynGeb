@@ -1,0 +1,122 @@
+medium:
+w weather       Weather Data
+a asset         Asset Data
+s simulation    Simulation Data
+
+h heat          Heat flow
+e electricity   Electricity flow
+m money         Monetary flow
+
+assets:
+short   long                    inputs  outputs
+-----------------------------------------------
+cfg     config                          as
+pv      photovoltaic            wam     pe
+pvt     photovoltaic_thermal    wahme   hpe
+grd     grid                    aem     em
+bty     battery                 aem     eh
+bdg     building                hase    m
+env     environment             ah      wh
+dh      district_heating        ma      h
+cr      credit                  ma      m
+ww      warm_water              hae         
+htr     heater                  aeme    h
+pmp     heat_pump               ahme    h
+geo     geothermal              ahme    h
+cnd     air_conditioning        ahme    h
+
+
+project:
+README.md
+data/
+configs/
+    simple.yaml
+    examples.yaml
+sims/
+src/
+	app.py                     (API server entry point)
+	server.py                  (Flask API server)
+    gui/                       (React + React Flow frontend)
+	    package.json
+	    src/
+	        App.tsx
+	        main.tsx
+	        ...
+	simulation.py              (Simulation loop + orchestration)
+    sim/
+	    config_io.py               (YAML read/write)
+	    data_io.py                 (CSV read/write)
+	    asset.py                   (Asset class)
+        assets/
+            pv.py                      (Photovoltaic asset)
+            pvt.py                     (Photovoltaic Thermal asset)     
+            grd.py                     (Grid asset)
+            bty.py                     (Battery asset)
+            el.py                      (Electric Load asset)
+            bdg.py                     (Building asset)
+            env.py                     (Environment asset)
+            dh.py                      (District Heating asset)
+            cr.py                      (Credit asset)
+            ww.py                      (Warm Water asset)
+            htr.py                     (Heater asset)
+            pmp.py                     (Heat Pump asset)
+            geo.py                     (Geothermal asset)
+            cnd.py                     (Air Conditioning asset)
+    	network.py                 (Connections + splitters)
+	controllers.py             (Dispatch/control strategies)
+
+core concepts:
+	medium:
+		heat, electricity, money
+	asset:
+		- has inputs/outputs per medium
+		- has config data (yaml)
+		- has state (time series)
+		- each asset has its own file with functions to calculate hourly in/out
+	pipe:
+		- connects asset outputs to inputs
+		- optional splitter with ratios or priorities
+
+yaml config (single nested file):
+	simulation:
+		start: YYYY-MM-DD
+		end: YYYY-MM-DD
+		timestep_hours: 1
+		weather_file: path.csv
+	assets:
+		pv:
+			class: Photovoltaic
+			params: { ... }
+		bt:
+			class: Battery
+			params: { ... }
+	pipes:
+		- from: pv.electricity_out
+		  to: bt.electricity_in
+		  splitter: { type: ratio, values: [0.7, 0.3] }
+
+
+
+simulation flow: (in simulation.py)
+    load config yaml
+    initialize assets
+    load environment asset with external data (weather, import/export prices)
+	initialize pipes
+	for each hour:
+        compute demand (inputs heat/electricity flow)
+		compute supply (outputs heat/electricity flow)
+        compute balance and grid interaction
+        compute wallet (money flow)
+		store results
+	export csv results
+
+gui:
+	config editor:
+		create/edit yaml
+		validate asset connections
+		save yaml
+        optional: simulation run button
+	analysis:
+		load csv
+		plot time series per medium
+		compare assets and totals

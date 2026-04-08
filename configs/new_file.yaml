@@ -1,0 +1,56 @@
+assets:
+  - id: pv_a1abdce8
+    asset_type: pv
+    name: PV 1
+    pos:
+      - 125.48
+      - 186.33
+    preset: Default
+    color: '#f6d365'
+    azimuth_deg: 180
+    capacity_kwp: 10
+    efficiency: 0.18
+    tilt_deg: 35
+  - id: el_af2255e9
+    asset_type: el
+    name: Load 1
+    pos:
+      - 600
+      - 100
+    preset: Default
+    color: '#a0e7b3'
+  - id: grd_45d2ba4c
+    asset_type: grd
+    name: Grid
+    pos:
+      - 351.45
+      - 146.04
+    preset: Default
+    color: '#8fd3f4'
+    import_kw: 0
+    price_export: 0.15
+    price_import: 0.25
+    type: static
+  - id: el_92c43fd8
+    asset_type: el
+    name: Electric Load 5
+    pos:
+      - 656
+      - 197.5
+    preset: Commercial
+    color: '#a0e7b3'
+    load_kw: 4
+    type: static
+pipes:
+  - id: pipe_4412545d
+    pos:
+      - 382.11
+      - 227.92
+    medium: electric
+    in:
+      - - pv_a1abdce8.electricity_out
+      - - grd_45d2ba4c.electricity_out
+    out:
+      - - el_af2255e9.electricity_in
+        - el_92c43fd8.electricity_in
+      - - grd_45d2ba4c.electricity_in

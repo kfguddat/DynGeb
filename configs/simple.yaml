@@ -1,0 +1,35 @@
+assets:
+  - id: pv_5aaa5616
+    asset_type: pv
+    name: PV 1
+    pos:
+      - 120
+      - 120
+    preset: Default
+    color: '#f6bd60'
+    capacity_kwp: 10
+    efficiency: 0.18
+    azimuth_deg: 180
+    tilt_deg: 35
+  - id: el_140ea77b
+    asset_type: el
+    name: Load 1
+    pos:
+      - 600
+      - 100
+    preset: Default
+    color: '#84a59d'
+    type: static
+    load_kw: 1
+  - id: grd_50862abf
+    asset_type: grd
+    name: Grid
+    pos:
+      - 600
+      - 280
+    preset: Default
+    color: '#6d597a'
+    type: static
+    price_import: 0.25
+    price_export: 0.15
+pipes: []
