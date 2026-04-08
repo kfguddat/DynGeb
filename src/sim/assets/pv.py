@@ -39,6 +39,16 @@ class pv(Asset):
 
 		return None
 
+	def _get_irradiance_kw(self) -> Optional[float]:
+		"""Return normalised irradiance (kW/kWp) from the data input port, or None."""
+		raw = self.get_input("irradiance_in")
+		if raw is None:
+			return None
+		try:
+			return float(raw)
+		except (TypeError, ValueError):
+			return None
+
 	def calc(self, *args: Any, **kwargs: Any) -> Any:
 		if args and isinstance(args[0], datetime):
 			timestamp = args[0]
