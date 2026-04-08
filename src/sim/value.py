@@ -87,3 +87,8 @@ class TimeSeries:
     
     def __repr__(self) -> str:
         return f"TimeSeries({self.data}, {len(self.values)} entries)"
+
+
+# Alias: Series is the preferred name going forward (TimeSeries retained for
+# backwards compatibility with existing code).
+Series = TimeSeries
