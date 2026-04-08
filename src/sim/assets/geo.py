@@ -13,7 +13,6 @@ class geo(Asset):
         "Default": {
             "capacity_kw": 10.0,
             "cop": 4.0,
-            "electricity_per_kw_heat": 0.25,
         },
     }
     INPUT_PORTS = {

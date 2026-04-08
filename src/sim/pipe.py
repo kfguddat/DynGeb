@@ -23,8 +23,11 @@ class Port:
         self.medium = medium
         self.description = description
         self.in_port = in_port
+        unit = {"electric": "kW", "thermal": "kW", "monetary": "EUR", "data": ""}.get(
+            medium.lower(), ""
+        )
         self.flow: TimeSeries = TimeSeries(
-            Value(unit="", description=description or name)
+            Value(unit=unit, description=description or name)
         )
 
     def __repr__(self) -> str:

@@ -33,7 +33,9 @@ class pvt(Asset):
         self.pv_efficiency = self.get_float_param("pv_efficiency", 0.15)
         self.thermal_efficiency = self.get_float_param("thermal_efficiency", 0.40)
 
-    def _get_irradiance_fraction(self) -> Optional[float]:
+    def _get_irradiance_kw(self) -> Optional[float]:
+        """Return normalised irradiance (0–1 fraction of peak) from the data
+        input port, or *None* when no irradiance data is connected."""
         raw = self.get_input("irradiance_in")
         if raw is None:
             return None
@@ -50,7 +52,7 @@ class pvt(Asset):
             timestamp = args[0]
 
             def compute() -> None:
-                irr = self._get_irradiance_fraction()
+                irr = self._get_irradiance_kw()
                 if irr is None:
                     irr = 0.5
 

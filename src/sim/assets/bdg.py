@@ -46,6 +46,7 @@ class bdg(Asset):
         self.c_mass = self.get_float_param("c_mass", 50.0)
         self.t_setpoint = self.get_float_param("t_setpoint", 21.0)
         self.t_initial = self.get_float_param("t_initial", 21.0)
+        self.floor_area_m2 = self.get_float_param("floor_area_m2", 100.0)
         self.base_load_kw = self.get_float_param("base_load_kw", 1.5)
         self.t_indoor: float = self.t_initial
 
@@ -63,7 +64,11 @@ class bdg(Asset):
                     except (TypeError, ValueError):
                         t_outdoor = 10.0
 
-                q_loss = max((self.t_indoor - t_outdoor) / max(self.r_envelope, 0.001), 0.0)
+                # Q_loss proportional to envelope area: U-value * area * delta_T / 1000
+                # r_envelope is interpreted as (K/kW) thermal resistance per m².
+                # Effective resistance = r_envelope / floor_area_m2 scales to building size.
+                effective_r = max(self.r_envelope / max(self.floor_area_m2, 1.0), 0.001)
+                q_loss = max((self.t_indoor - t_outdoor) / effective_r, 0.0)
                 heat_demand = q_loss + self.base_load_kw
                 heat_supplied = self.sum_input("heat_in")
 
