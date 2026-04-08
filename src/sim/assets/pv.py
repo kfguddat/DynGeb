@@ -37,7 +37,20 @@ class pv(Asset):
 		self.tilt = self.get_param("tilt_deg", 35)
 
 
-		return None
+	def _get_irradiance_kw(self) -> Optional[float]:
+		"""Return normalised irradiance (0–1 fraction of peak) from the data
+		input port, or *None* when no irradiance data is connected."""
+		raw = self.get_input("irradiance_in")
+		if raw is None:
+			return None
+		try:
+			val = float(raw)
+		except (TypeError, ValueError):
+			return None
+		# Irradiance may arrive as W/m² (peak ≈ 1000) or as a 0–1 fraction.
+		if val > 2.0:
+			val = val / 1000.0
+		return max(val, 0.0)
 
 	def calc(self, *args: Any, **kwargs: Any) -> Any:
 		if args and isinstance(args[0], datetime):
