@@ -39,6 +39,16 @@ class pv(Asset):
 
 		return None
 
+	def _get_irradiance_kw(self) -> Optional[float]:
+		"""Get irradiance from data port input, or None if not available."""
+		val = self.get_input("irradiance_in")
+		if val is None:
+			return None
+		try:
+			return float(val) / 1000.0
+		except (TypeError, ValueError):
+			return None
+
 	def calc(self, *args: Any, **kwargs: Any) -> Any:
 		if args and isinstance(args[0], datetime):
 			timestamp = args[0]

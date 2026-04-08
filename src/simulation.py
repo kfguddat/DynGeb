@@ -287,6 +287,7 @@ class Simulation:
         if 'env' in self.assets:
             env_asset = self.assets['env']
             env_asset.calc(timestamp)
+            self._propagate_data_pipes(timestamp)
 
         # Step 2: Trigger recursive calc propagation for all assets.
         for asset_id, asset in self.assets.items():
@@ -302,6 +303,20 @@ class Simulation:
 
         # Step 3: Store results.
         self._store_results(timestamp)
+
+    def _propagate_data_pipes(self, timestamp: datetime) -> None:
+        """Push data-medium port values through pipes to connected asset inputs."""
+        for pipe in self.pipes:
+            if self._normalize_medium(pipe.medium) != "data":
+                continue
+            for supply_group in pipe.in_ports:
+                for supply_port in supply_group:
+                    value = supply_port.asset.get_output(supply_port.name)
+                    if value is None:
+                        continue
+                    for demand_group in pipe.out_ports:
+                        for demand_port in demand_group:
+                            demand_port.asset.set_input(demand_port.name, value, timestamp)
 
     def _estimate_requested_input(self, asset: Asset, port_name: str) -> float:
         demand_key = ""
