@@ -99,7 +99,7 @@ class Pipe:
                         timestamp,
                         Value(value=remaining, unit=unit),
                     )
-                except Exception:
+                except (TypeError, ValueError, AttributeError):
                     continue
 
                 if isinstance(response, Value):

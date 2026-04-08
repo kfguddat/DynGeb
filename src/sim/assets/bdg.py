@@ -40,7 +40,7 @@ class bdg(Asset):
         "data": [("temperature_in", "Outside Temperature")],
     }
     OUTPUT_PORTS = {
-        "monetary": [("heat_demand_out", "Heat Demand (kW)")],
+        "thermal": [("heat_demand_out", "Heat Demand (kW)")],
         "data": [("t_inside_out", "Indoor Temperature (°C)")],
     }
 

@@ -30,7 +30,7 @@ class bty(Asset):
     }
     OUTPUT_PORTS = {
         "electric": [("electricity_out", "Discharge")],
-        "monetary": [("soc_out", "State of Charge")],
+        "data": [("soc_out", "State of Charge")],
     }
 
     def __init__(self, name: str, params: Optional[Dict[str, Any]] = None):

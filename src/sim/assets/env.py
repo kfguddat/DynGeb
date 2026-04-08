@@ -58,8 +58,8 @@ class env(Asset):
                 self._load_csv_weather(file_path)
             elif suffix == ".dat":
                 self._load_try_weather(file_path)
-        except Exception:
-            pass
+        except (OSError, ValueError, UnicodeDecodeError) as exc:
+            print(f"Warning: could not load weather file '{path}': {exc}")
 
     def _load_csv_weather(self, file_path: Path) -> None:
         with open(file_path, newline="", encoding="utf-8") as f:
